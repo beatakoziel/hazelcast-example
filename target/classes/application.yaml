@@ -1,0 +1,11 @@
+hazelcast-client:
+  network:
+    cluster-members:
+      - 127.0.0.1
+      - 127.0.0.2
+    outbound-ports:
+      - 34600
+      - 34700-34710
+    smart-routing: true
+    redo-operation: true
+    connection-timeout: 60000
