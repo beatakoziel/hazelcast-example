@@ -1,5 +1,6 @@
 package com.hazelcast;
 
+import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -25,7 +26,7 @@ public class Main {
             Integer choice = printMenu();
             clearScreen();
             System.out.println(choice);
-            if (choice > 0 && choice < 6) {
+            if (choice > 0 && choice < 7) {
                 switch (choice) {
                     case 1:
                         addElementToDatabase(playersMap, clubsMap);
@@ -42,6 +43,9 @@ public class Main {
                     case 5:
                         removeElement(playersMap, clubsMap);
                         break;
+                    case 6:
+                        calculateAveragePlayerSalary(playersMap);
+                        break;
                 }
                 System.out.println("Press enter to continue...");
                 System.in.read();
@@ -55,12 +59,12 @@ public class Main {
         if (s > 0 && s < 3) {
             switch (s) {
                 case 1:
-                    for(Map.Entry<UUID, Player> e : players.entrySet()){
+                    for (Map.Entry<UUID, Player> e : players.entrySet()) {
                         System.out.println(e.getKey() + " => " + e.getValue());
                     }
                     break;
                 case 2:
-                    for(Map.Entry<UUID, SportClub> e : clubs.entrySet()){
+                    for (Map.Entry<UUID, SportClub> e : clubs.entrySet()) {
                         System.out.println(e.getKey() + " => " + e.getValue());
                     }
                     break;
@@ -77,14 +81,14 @@ public class Main {
             switch (s) {
                 case 1:
                     String playerId = scanner.next();
-                    if(isValidUUID(playerId) && players.containsKey(UUID.fromString(playerId))) {
+                    if (isValidUUID(playerId) && players.containsKey(UUID.fromString(playerId))) {
                         Player player = players.get(UUID.fromString(playerId));
                         System.out.println(playerId + " => " + player.toString());
                     } else System.out.printf("Player with id %s not found.%n", playerId);
                     break;
                 case 2:
                     String clubId = scanner.next();
-                    if(isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
+                    if (isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
                         SportClub club = clubs.get(UUID.fromString(clubId));
                         System.out.println(clubId + " => " + club.toString());
                     } else System.out.printf("Club with id %s not found.%n", clubId);
@@ -102,7 +106,7 @@ public class Main {
             switch (s) {
                 case 1:
                     String playerId = scanner.next();
-                    if(isValidUUID(playerId) && players.containsKey(UUID.fromString(playerId))) {
+                    if (isValidUUID(playerId) && players.containsKey(UUID.fromString(playerId))) {
                         Player player = getPlayerFromUser(clubs, scanner);
                         players.put(UUID.fromString(playerId), player);
                         System.out.println(playerId + " => " + player.toString());
@@ -110,7 +114,7 @@ public class Main {
                     break;
                 case 2:
                     String clubId = scanner.next();
-                    if(isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
+                    if (isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
                         SportClub sportClub = getSportClub(scanner);
                         clubs.put(UUID.fromString(clubId), sportClub);
                         System.out.println(clubId + " => " + sportClub.toString());
@@ -129,14 +133,14 @@ public class Main {
             switch (s) {
                 case 1:
                     String playerId = scanner.next();
-                    if(isValidUUID(playerId) && players.containsKey(UUID.fromString(playerId))) {
+                    if (isValidUUID(playerId) && players.containsKey(UUID.fromString(playerId))) {
                         Player player = players.remove(UUID.fromString(playerId));
                         System.out.println("Removed:" + playerId + " => " + player.toString());
                     } else System.out.printf("Player with id %s not found.%n", playerId);
                     break;
                 case 2:
                     String clubId = scanner.next();
-                    if(isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
+                    if (isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
                         SportClub club = clubs.remove(UUID.fromString(clubId));
                         System.out.println("Removed:" + clubId + " => " + club.toString());
                     } else System.out.printf("Club with id %s not found.%n", clubId);
@@ -173,16 +177,21 @@ public class Main {
         } else System.out.println("Wrong number, choose again.");
     }
 
+    private static void calculateAveragePlayerSalary(IMap<UUID, Player> players) {
+        System.out.println("Calculate average salary");
+        Double averageSalary = players.aggregate(Aggregators.integerAvg("salary"));
+        System.out.println("Average player salary: " + averageSalary);
+    }
+
     private static SportClub getSportClub(Scanner scanner) {
         System.out.println("Write club name:");
         String name = scanner.next();
         System.out.println("Write creation year:");
         Integer creationYear = scanner.nextInt();
-        SportClub sportClub = SportClub.builder()
+        return SportClub.builder()
                 .name(name)
                 .creationYear(creationYear)
                 .build();
-        return sportClub;
     }
 
     private static Player getPlayerFromUser(IMap<UUID, SportClub> clubs, Scanner scanner) {
@@ -190,19 +199,21 @@ public class Main {
         String firstname = scanner.next();
         System.out.println("Write player surname:");
         String surname = scanner.next();
-        System.out.println("Write id:");
+        System.out.println("Write club id:");
         String clubId = scanner.next();
+        System.out.println("Write player salary:");
+        Integer playerSalary = scanner.nextInt();
         SportClub club = null;
-        if(isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
-             club = clubs.get(UUID.fromString(clubId));
+        if (isValidUUID(clubId) && clubs.containsKey(UUID.fromString(clubId))) {
+            club = clubs.get(UUID.fromString(clubId));
             System.out.println(clubId + " => " + club.toString());
         } else System.out.printf("Club with id %s not found.%n", clubId);
-        Player player = Player.builder()
+        return Player.builder()
                 .firstname(firstname)
                 .surname(surname)
                 .club(club)
+                .salary(playerSalary)
                 .build();
-        return player;
     }
 
     private static Integer printMenu() {
@@ -213,6 +224,7 @@ public class Main {
         System.out.println("3.GET BY ID");
         System.out.println("4.GET ALL");
         System.out.println("5.REMOVE");
+        System.out.println("6.CALCULATE AVERAGE PLAYER SALARY");
         Scanner scan = new Scanner(System.in);
         return scan.nextInt();
     }
