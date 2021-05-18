@@ -9,7 +9,7 @@ import com.hazelcast.config.NetworkConfig;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class HConfig {
+public class HazelcastConfig {
 
 	public static Config getConfig() throws UnknownHostException {
 		Config config = new Config();

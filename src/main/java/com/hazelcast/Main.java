@@ -1,8 +1,8 @@
 package com.hazelcast;
 
 import com.hazelcast.aggregation.Aggregators;
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.models.Player;
@@ -17,11 +17,10 @@ import java.util.regex.Pattern;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        //HAZELCAST CONFIG
-        Config config = HConfig.getConfig();
-        HazelcastInstance instance = Hazelcast.newHazelcastInstance(config);
-        IMap<UUID, Player> playersMap = instance.getMap("players");
-        IMap<UUID, SportClub> clubsMap = instance.getMap("clubs");
+        ClientConfig clientConfig = HazelcastConfig.getClientConfig();
+        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
+        IMap<UUID, Player> playersMap = client.getMap("players");
+        IMap<UUID, SportClub> clubsMap = client.getMap("clubs");
         while (true) {
             Integer choice = printMenu();
             clearScreen();
