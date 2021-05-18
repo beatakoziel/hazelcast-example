@@ -7,8 +7,11 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.models.Player;
 import com.hazelcast.models.SportClub;
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
@@ -25,7 +28,7 @@ public class Main {
             Integer choice = printMenu();
             clearScreen();
             System.out.println(choice);
-            if (choice > 0 && choice < 7) {
+            if (choice > 0 && choice < 9) {
                 switch (choice) {
                     case 1:
                         addElementToDatabase(playersMap, clubsMap);
@@ -44,6 +47,12 @@ public class Main {
                         break;
                     case 6:
                         calculateAveragePlayerSalary(playersMap);
+                        break;
+                    case 7:
+                        calculateAveragePlayerSalaryClient(playersMap);
+                        break;
+                    case 8:
+                        getElementByName(playersMap, clubsMap);
                         break;
                 }
                 System.out.println("Press enter to continue...");
@@ -91,6 +100,29 @@ public class Main {
                         SportClub club = clubs.get(UUID.fromString(clubId));
                         System.out.println(clubId + " => " + club.toString());
                     } else System.out.printf("Club with id %s not found.%n", clubId);
+                    break;
+            }
+        } else System.out.println("Wrong number, choose again.");
+    }
+
+    private static void getElementByName(IMap<UUID, Player> players, IMap<UUID, SportClub> clubs) throws IOException {
+        System.out.println("Getting by name");
+        Integer s = printSubMenu();
+        Scanner scanner = new Scanner(System.in);
+        if (s > 0 && s < 3) {
+            System.out.println("Write name:");
+            switch (s) {
+                case 1:
+                    String playerName = scanner.next();
+                    Predicate predicate = Predicates.equal("firstname", playerName);
+                    Collection<Player> playersCollection = players.values(predicate);
+                    playersCollection.forEach(player -> System.out.println(player.toString()));
+                    break;
+                case 2:
+                    String clubName = scanner.next();
+                    Predicate clubPredicate = Predicates.equal("name", clubName);
+                    Collection<SportClub> clubsCollection = clubs.values(clubPredicate);
+                    clubsCollection.forEach(player -> System.out.println(player.toString()));
                     break;
             }
         } else System.out.println("Wrong number, choose again.");
@@ -182,6 +214,15 @@ public class Main {
         System.out.println("Average player salary: " + averageSalary);
     }
 
+    private static void calculateAveragePlayerSalaryClient(IMap<UUID, Player> players) {
+        System.out.println("Calculate average salary");
+        double averageSalary = players.values().stream()
+                .mapToDouble(Player::getSalary)
+                .average()
+                .orElse(0);
+        System.out.println("Average player salary: " + averageSalary);
+    }
+
     private static SportClub getSportClub(Scanner scanner) {
         System.out.println("Write club name:");
         String name = scanner.next();
@@ -224,6 +265,8 @@ public class Main {
         System.out.println("4.GET ALL");
         System.out.println("5.REMOVE");
         System.out.println("6.CALCULATE AVERAGE PLAYER SALARY");
+        System.out.println("7.CALCULATE AVERAGE PLAYER SALARY BY CLIENT");
+        System.out.println("8.GET BY NAME");
         Scanner scan = new Scanner(System.in);
         return scan.nextInt();
     }
